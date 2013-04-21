@@ -12,8 +12,8 @@ var
 
 	loader = j5g3.loader(),
 	assets = {
-		spritesheet: loader.img('blocks-ss.png'),
-		background: loader.img('light.png')
+		spritesheet: loader.img('resources/blocks-ss.png'),
+		background: loader.img('resources/light.png')
 	},
 
 	loading= j5g3.clip().add([
