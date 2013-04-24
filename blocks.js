@@ -42,6 +42,9 @@ var
 		
 		tw: BLOCK_WIDTH,
 		th: BLOCK_HEIGHT,
+		
+		row: 1,
+		col: 0,
 
 		_get_map: function(piece, c)
 		{
@@ -65,7 +68,8 @@ var
 			return {
 				map: map,
 				cols: this._WIDTHS[p],
-				rows: map[0].length
+				rows: map[0].length,
+				rotation: 0
 			};
 		},
 
@@ -81,6 +85,20 @@ var
 			this.cy = -this.height/2;
 
 			this.map = this.piece.map[0];
+		},
+		
+		each_block: function(fn)
+		{
+		var
+			map = this.piece.map[this.piece.rotation],
+			l = map.length, i
+		;
+			while (l--)
+				for (i=0; i<map[l].length; i++)
+					if (map[l][i] && 
+						fn(map[l][i], this.row+l, 
+							this.col+i, this))
+							return;
 		},
 
 		tween: function(property, to)
@@ -103,16 +121,38 @@ var
 				on_remove: function() { me.moving = false; }
 			}));
 		},
+		
+		down: function(speed)
+		{
+		var
+			row = Math.floor((this.cy + this.y) / BLOCK_HEIGHT)+1
+		;
+			this.y += speed;	
+			
+			if (this.row !== row)
+			{
+				this.row = row;
+				console.log(row);
+			}
+		},
 	
 		rotate: function()
 		{
+			if (this.piece.rotation++ === 3)
+				this.piece.rotation=0;
+				
 			this.tween('rotation', this.rotation+Math.PI/2);
 		},
-
-		col: function(col)
+		
+		set_col: function(c)
 		{
-			this._col = col;
-			this.x = col*BLOCK_WIDTH-this.cx;
+			this.x = c * BLOCK_WIDTH - this.cx;
+			this.col = c+1;
+		},
+		
+		left: function()
+		{
+			
 		}
 
 	}),
@@ -120,14 +160,20 @@ var
 	Board = j5g3.Clip.extend({
 	
 		x: 10, y: 120,
-		width: BLOCK_WIDTH*BOARD_WIDTH, height: BLOCK_HEIGHT*BOARD_HEIGHT,
+		width: BLOCK_WIDTH*BOARD_WIDTH, 
+		height: BLOCK_HEIGHT*BOARD_HEIGHT,
 
 		setup: function()
 		{
 			this.stretch(game.stage.width-20, game.stage.height-130);
-			this.add([
-				j5g3.rect({ stroke: '#eee', fill: '#333', alpha: 0.3, width: BLOCK_WIDTH*BOARD_WIDTH, height: BLOCK_HEIGHT*BOARD_HEIGHT })
-			]);
+			this.add(
+				j5g3.rect({ 
+					stroke: '#eee', fill: '#333', 
+					alpha: 0.3, 
+					width: this.width,
+					height: this.height
+				})
+			);
 			
 			this.reset();
 		},
@@ -142,6 +188,25 @@ var
 					return false;
 					
 			return true;
+		},
+		
+		/**
+		 * Returns false if movement is not allowed.
+		 * TODO This could be optimized
+		 */
+		verify: function(x, y)
+		{
+		var
+			map = this.map,
+			result = true
+		;
+			this.piece.each_block(function(block, row, col, p)
+			{
+				if (map[row+y][col+x])
+					return (result = false);
+			});
+			
+			return result;
 		},
 		
 		update_score: function(n)
@@ -167,15 +232,28 @@ var
 				this.update_score(removed);
 		},
 		
-		nail: function(piece)
+		nail: function()
 		{
-			
+		var
+			me = this,
+			map = this.map,
+			sprite
+		;
+			this.piece.each_block(function(block, row, col, p)
+			{
+				map[row][col] = sprite = game.spritesheet.sprite(block+10);	
+				me.add(sprite.pos(
+					(col-1)*BLOCK_WIDTH, 
+					(row-1)*BLOCK_HEIGHT
+				));
+			});
+			this.piece.remove();
 		},
 		
 		reset: function()
 		{
 		var
-			i = BOARD_HEIGHT+2
+			i = BOARD_HEIGHT+1
 		;
 			this.map = [];
 			while (i--)
@@ -186,7 +264,9 @@ var
 
 		add_piece: function(p)
 		{
-			this.add(p);
+			p.set_col(4);
+			p.y = -p.cy;
+			this.add(this.piece = p);
 		}
 
 	}),
@@ -243,7 +323,7 @@ var
 
 		mousemove: function()
 		{
-			this.piece.col(Math.floor(this.mice.x/(game.stage.width/BOARD_WIDTH)));
+			//this.piece.col(Math.floor(this.mice.x/(game.stage.width/BOARD_WIDTH)));
 		},
 
 		click: function()
@@ -271,10 +351,13 @@ var
 		
 		gravity: function()
 		{
-			this.piece.y += this.speed;
+			this.piece.down(this.speed);
 			
-			if (this.piece.y > this.board.height)
+			if (this.board.verify(0, 1)===false)
+			{
+				this.board.nail();
 				this.go_next();
+			}
 		},
 		
 		update: function()
@@ -296,7 +379,7 @@ var
 			]);
 			this.next_piece = new Piece();
 			this.go_next();
-
+			
 			this.mice = mice(game.stage.canvas);
 			this.mice.mousemove = this.mousemove.bind(this);
 			this.mice.click = this.click.bind(this);
