@@ -20,8 +20,7 @@ var
 	//
 	////////////////////////////
 	assets = {
-		spritesheet: loader.img('resources/blocks-ss.png'),
-		background: loader.img('resources/light.png'),
+		spritesheet: loader.img('resources/blocks-ss.png')
 
 		/*audio: { 
 			pop   : j5g3.id('audio-pop'),
@@ -39,7 +38,7 @@ var
 
 	Piece = j5g3.Map.extend({
 
-		_WIDTHS: [3,4,3,2,3,3,3],
+		_WIDTHS: [3,2,3,2,3,3,3],
 		
 		tw: BLOCK_WIDTH,
 		th: BLOCK_HEIGHT,
@@ -47,8 +46,8 @@ var
 		_get_map: function(piece, c)
 		{
 			switch (piece) {
-			case 0: return [ [[c],[c],[c,c]], [[c,c,c],[c],[]], [[0,c,c],[0,0,c],[0,0,c]], [[],[0,0,c],[c,c,c]] ];
-			case 1: return [ [[0,c],[0,c],[0,c],[0,c]], [[],[c,c,c,c],[],[]], [[0,0,c],[0,0,c],[0,0,c],[0,0,c]], [[],[],[c,c,c,c],[]] ];
+			case 0: return [ [[c],[c],[c,c]], [[c,c,c],[c]], [[0,c,c],[0,0,c],[0,0,c]], [[0,0,c],[c,c,c]] ];
+			case 1: return [ [[c],[c],[c],[c]], [[c,c,c,c]], [[c],[c],[c],[c]], [[c,c,c,c]] ];
 			case 2: return [ [[c],[c,c],[c]], [[c,c,c],[0,c],[]], [[0,0,c],[0,c,c],[0,0,c]], [[],[0,c],[c,c,c]] ];
 			case 3: return [ [[c,c],[c,c]],[[c,c],[c,c]],[[c,c],[c,c]],[[c,c],[c,c]] ] ;
 			case 4: return [ [[0,c],[0,c],[c,c]], [[c],[c,c,c],[]], [[0,c,c],[0,c],[0,c]], [[],[c,c,c],[0,0,c]] ];
@@ -61,12 +60,12 @@ var
 		{
 		var
 			p = j5g3.irand(7),
-			map = this._get_map(p, j5g3.irand(9))
+			map = this._get_map(p, 1+j5g3.irand(9))
 		;
 			return {
 				map: map,
-				rows: this._WIDTHS[p],
-				cols: map[0].length
+				cols: this._WIDTHS[p],
+				rows: map[0].length
 			};
 		},
 
@@ -113,7 +112,7 @@ var
 		col: function(col)
 		{
 			this._col = col;
-			this.x = col*BLOCK_WIDTH;
+			this.x = col*BLOCK_WIDTH-this.cx;
 		}
 
 	}),
@@ -141,7 +140,13 @@ var
 			while (l--)
 				if (!row[l])
 					return false;
+					
 			return true;
+		},
+		
+		update_score: function(n)
+		{
+			
 		},
 		
 		reduce: function()
@@ -149,19 +154,17 @@ var
 		var
 			map = this.map,
 			y = map.length - 1,
-			x,
-			row,
-			bw = BOARD_WIDTH,
-			row_complete=0,
 			removed
 		;
 			while (y--)
-			{
-				row = map[y];
+				if (this.is_row_complete(map[y]))
+				{
+					this.reduce_row(map[y]);
+					removed++;
+				}
 				
-				
-			}
-			
+			if (removed)
+				this.update_score(removed);
 		},
 		
 		nail: function(piece)
@@ -216,6 +219,7 @@ var
 		}
 
 	}),
+	
 	GameOver = j5g3.Clip.extend({
 		
 		setup: function()
@@ -230,10 +234,12 @@ var
 
 		speed: 1.5,
 		
-		scoreboard: j5g3.clip({ fill: '#eee', font: '20px Arial', x: 240, y: 30 })
+		scoreboard: j5g3.clip({ 
+				fill: '#eee', font: '20px Arial', x: 240, y: 30
+			})
 			.add([ j5g3.text('Score:'), j5g3.text({ text: '0', y: 30 }) ])
 		,
-		next_container: j5g3.clip({ x: 20, y: 20, sx: 0.6, sy: 0.5 }),
+		next_container: j5g3.clip({ x: 50, y: 50, sx: 0.4, sy: 0.4 }),
 
 		mousemove: function()
 		{
@@ -248,10 +254,10 @@ var
 		is_gameover: function()
 		{
 		var
-			i = 0,
-			map = board.map[0]
+			i = 1,
+			map = this.board.map[0]
 		;
-			for (;i<BOARD.WIDTH; i++)
+			for (;i<=BOARD_WIDTH; i++)
 				if (map[i])
 					return true;
 		},
@@ -275,7 +281,7 @@ var
 		{
 			this.gravity();
 				
-			if (is_gameover())
+			if (this.is_gameover())
 				this.gameover();
 		},
 
@@ -338,10 +344,7 @@ var
 		start_intro: function()
 		{
 			this.spritesheet = j5g3.spritesheet(assets.spritesheet).grid(10, 2);
-			this.stage.add([
-				assets.background,
-				new Intro()
-			]);
+			this.stage.add(new Intro());
 
 			this.loading.remove();
 		},
