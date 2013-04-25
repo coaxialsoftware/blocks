@@ -49,7 +49,7 @@ var
 		_get_map: function(piece, c)
 		{
 			switch (piece) {
-			case 0: return [ [[c],[c],[c,c]], [[c,c,c],[c]], [[0,c,c],[0,0,c],[0,0,c]], [[0,0,c],[c,c,c]] ];
+			case 0: return [ [[c],[c],[c,c]], [[c,c,c],[c]], [[0,c,c],[0,0,c],[0,0,c]], [[], [0,0,c],[c,c,c]] ];
 			case 1: return [ [[0,c],[0,c],[0,c],[0,c]], [[],[c,c,c,c],[],[]], [[0,0,c],[0,0,c],[0,0,c],[0,0,c]], [[],[],[c,c,c,c],[]] ];
 			case 2: return [ [[c],[c,c],[c]], [[c,c,c],[0,c],[]], [[0,0,c],[0,c,c],[0,0,c]], [[],[0,c],[c,c,c]] ];
 			case 3: return [ [[c,c],[c,c]],[[c,c],[c,c]],[[c,c],[c,c]],[[c,c],[c,c]] ] ;
@@ -370,6 +370,7 @@ var
 	Main = j5g3.Clip.extend({
 
 		speed: 1.5,
+		level: 0,
 		
 		scoreboard: new ScoreBoard(),
 		
@@ -452,12 +453,19 @@ var
 		
 		score: function(removed)
 		{
+			this.level += removed;
 			this.scoreboard.points({
 				1: 100,
 				2: 250,
 				3: 400,
 				4: 800
 			}[removed]);
+			
+			if (this.level > 10)
+			{
+				this.speed += 0.2;
+				this.level = 0;
+			}
 		},
 
 		setup: function()
