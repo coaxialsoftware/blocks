@@ -20,14 +20,14 @@ var
 	//
 	////////////////////////////
 	assets = {
-		spritesheet: loader.img('resources/blocks-ss.png')
+		spritesheet: loader.img('resources/blocks-ss.png'),
 
-		/*audio: { 
-			pop   : j5g3.id('audio-pop'),
-			slide : j5g3.id('audio-slide'),
-			rotate: j5g3.id('audio-rotate'),
-			line  : j5g3.id('audio-line')
-		}*/
+		audio: { 
+			pop   : loader.audio('resources/pop.ogg'),
+			slide : loader.audio('resources/slide.ogg'),
+			rotate: loader.audio('resources/rotate.ogg'),
+			line  : loader.audio('resources/line.ogg')
+		}
 	},
 	
 	///////////////////////////////
@@ -38,7 +38,7 @@ var
 
 	Piece = j5g3.Map.extend({
 
-		_WIDTHS: [3,2,3,2,3,3,3],
+		_WIDTHS: [3,4,3,2,3,3,3],
 		
 		tw: BLOCK_WIDTH,
 		th: BLOCK_HEIGHT,
@@ -50,7 +50,7 @@ var
 		{
 			switch (piece) {
 			case 0: return [ [[c],[c],[c,c]], [[c,c,c],[c]], [[0,c,c],[0,0,c],[0,0,c]], [[0,0,c],[c,c,c]] ];
-			case 1: return [ [[c],[c],[c],[c]], [[c,c,c,c]], [[c],[c],[c],[c]], [[c,c,c,c]] ];
+			case 1: return [ [[0,c],[0,c],[0,c],[0,c]], [[],[c,c,c,c],[],[]], [[0,0,c],[0,0,c],[0,0,c],[0,0,c]], [[],[],[c,c,c,c],[]] ];
 			case 2: return [ [[c],[c,c],[c]], [[c,c,c],[0,c],[]], [[0,0,c],[0,c,c],[0,0,c]], [[],[0,c],[c,c,c]] ];
 			case 3: return [ [[c,c],[c,c]],[[c,c],[c,c]],[[c,c],[c,c]],[[c,c],[c,c]] ] ;
 			case 4: return [ [[0,c],[0,c],[c,c]], [[c],[c,c,c],[]], [[0,c,c],[0,c],[0,c]], [[],[c,c,c],[0,0,c]] ];
@@ -124,24 +124,28 @@ var
 		
 		down: function(speed)
 		{
-		var
-			row = Math.floor((this.cy + this.y) / BLOCK_HEIGHT)+1
-		;
 			this.y += speed;	
-			
-			if (this.row !== row)
-			{
-				this.row = row;
-				console.log(row);
-			}
+			this.row = Math.floor((this.cy + this.y) / BLOCK_HEIGHT)+1;
 		},
-	
-		rotate: function()
+		
+		rotate: function(dir, verify)
 		{
-			if (this.piece.rotation++ === 3)
+			var
+				d = dir || 1,
+				r = this.piece.rotation += d
+			;
+			
+			if (r === 4)
 				this.piece.rotation=0;
+			else if (r === -1)
+				this.piece.rotation=3;
 				
-			this.tween('rotation', this.rotation+Math.PI/2);
+			if (verify && verify(0,0))
+			{
+				game.sound('rotate');
+				this.tween('rotation', this.rotation+Math.PI/2*dir);
+			} else
+				this.piece.rotation -= d;
 		},
 		
 		set_col: function(c)
@@ -152,7 +156,14 @@ var
 		
 		left: function()
 		{
-			
+			this.tween('x', this.x-BLOCK_WIDTH);
+			this.col -= 1;
+		},
+		
+		right: function()
+		{
+			this.tween('x', this.x+BLOCK_WIDTH);
+			this.col += 1;
 		}
 
 	}),
@@ -209,27 +220,43 @@ var
 			return result;
 		},
 		
-		update_score: function(n)
-		{
-			
-		},
-		
 		reduce: function()
 		{
 		var
 			map = this.map,
 			y = map.length - 1,
-			removed
+			removed=0
 		;
 			while (y--)
 				if (this.is_row_complete(map[y]))
 				{
-					this.reduce_row(map[y]);
+					this.reduce_row(map[y], y++);
 					removed++;
 				}
 				
 			if (removed)
-				this.update_score(removed);
+				this.on_score(removed);
+		},
+		
+		reduce_row: function(row, n)
+		{
+		var
+			i = 1,
+			map = this.map
+		;
+			game.sound('line');
+			
+			for (; i<row.length-1; i++)
+				row[i].remove();
+			
+			for (; n>1; n--)
+				for (i=1; i<=BOARD_WIDTH; i++)
+				{
+					map[n][i] = map[n-1][i];
+					map[n][i].y += BLOCK_HEIGHT;
+				}
+					
+			map[0]=[10,0,0,0,0,0,0,0,0,0,0,10];
 		},
 		
 		nail: function()
@@ -239,6 +266,7 @@ var
 			map = this.map,
 			sprite
 		;
+			game.sound('pop');
 			this.piece.each_block(function(block, row, col, p)
 			{
 				map[row][col] = sprite = game.spritesheet.sprite(block+10);	
@@ -248,6 +276,7 @@ var
 				));
 			});
 			this.piece.remove();
+			this.reduce();
 		},
 		
 		reset: function()
@@ -265,10 +294,33 @@ var
 		add_piece: function(p)
 		{
 			p.set_col(4);
-			p.y = -p.cy;
+			p.y = -p.cy - BLOCK_HEIGHT;
 			this.add(this.piece = p);
 		}
 
+	}),
+	
+	ScoreBoard = j5g3.Clip.extend({
+		
+		fill: '#eee', 
+		font: '20px Arial', 
+		x: 240, 
+		y: 30,
+		
+		setup: function()
+		{
+			this.score = j5g3.text({ text: '0', y: 30 });
+			this.add([ 
+				j5g3.text('Score:'), 
+				this.score
+			]);
+		},
+		
+		points: function(p)
+		{
+			this.score.text = parseInt(this.score.text, 10)+p;	
+		}
+		
 	}),
 	
 	///////////////////////////////
@@ -302,10 +354,15 @@ var
 	
 	GameOver = j5g3.Clip.extend({
 		
+		y: 100,
+		x: 80,
+		
+		font: '40px sans-serif',
+		fill: '#eee',
+		
 		setup: function()
 		{
-			this.y = 20;
-			this.add(j5g3.text('game over.'));
+			this.add(j5g3.text('Game Over!'));
 		}
 		
 	}),
@@ -314,21 +371,30 @@ var
 
 		speed: 1.5,
 		
-		scoreboard: j5g3.clip({ 
-				fill: '#eee', font: '20px Arial', x: 240, y: 30
-			})
-			.add([ j5g3.text('Score:'), j5g3.text({ text: '0', y: 30 }) ])
-		,
+		scoreboard: new ScoreBoard(),
+		
 		next_container: j5g3.clip({ x: 50, y: 50, sx: 0.4, sy: 0.4 }),
 
 		mousemove: function()
 		{
 			//this.piece.col(Math.floor(this.mice.x/(game.stage.width/BOARD_WIDTH)));
 		},
+		
+		left: function()
+		{
+			if (!this.piece.moving && this.board.verify(-1, 1))
+				this.piece.left();
+		},
+		
+		right: function()
+		{
+			if (!this.piece.moving && this.board.verify(1, 1))
+				this.piece.right();
+		},
 
 		click: function()
 		{
-			this.piece.rotate();
+			this.piece.rotate(1, this.board.verify.bind(this.board));
 		},
 		
 		is_gameover: function()
@@ -360,12 +426,38 @@ var
 			}
 		},
 		
+		down: function()
+		{
+			this.piece.down(BLOCK_HEIGHT/2);
+			this.gravity();
+		},
+		
+		slide: function()
+		{
+			game.sound('slide');
+			
+			while (this.board.verify(0, 1))
+				this.piece.down(BLOCK_HEIGHT/2);
+			
+			this.gravity();
+		},
+		
 		update: function()
 		{
 			this.gravity();
 				
 			if (this.is_gameover())
 				this.gameover();
+		},
+		
+		score: function(removed)
+		{
+			this.scoreboard.points({
+				1: 100,
+				2: 250,
+				3: 400,
+				4: 800
+			}[removed]);
 		},
 
 		setup: function()
@@ -380,9 +472,15 @@ var
 			this.next_piece = new Piece();
 			this.go_next();
 			
-			this.mice = mice(game.stage.canvas);
-			this.mice.mousemove = this.mousemove.bind(this);
-			this.mice.click = this.click.bind(this);
+			this.mice = mice(document.body, {
+				up: this.click.bind(this),
+				left: this.left.bind(this),
+				right: this.right.bind(this),
+				down: this.down.bind(this),
+				fire: this.slide.bind(this)
+			});
+			
+			this.board.on_score = this.score.bind(this);
 		},
 
 		go_next: function()
@@ -418,6 +516,13 @@ var
 				}
 			})
 		]),
+		
+		// TODO replace with some library
+		sound: function(name)
+		{
+			assets.audio[name].currentTime = 0;
+			assets.audio[name].play();
+		},
 
 		start_main: function()
 		{
