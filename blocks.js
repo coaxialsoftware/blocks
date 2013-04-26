@@ -108,6 +108,9 @@ var
 			from = { },
 			_to = { }
 		;
+			if (me.moving)
+				return;
+				
 			me.clear_cache();
 			me.moving = true;
 			from[property] = me[property];
@@ -158,15 +161,23 @@ var
 			this.col = c+1;
 		},
 		
-		left: function()
+		left: function(notween)
 		{
-			this.tween('x', this.x-BLOCK_WIDTH);
+			if (notween)
+				this.x -= BLOCK_WIDTH;
+			else
+				this.tween('x', this.x-BLOCK_WIDTH);
+				
 			this.col -= 1;
 		},
 		
-		right: function()
+		right: function(notween)
 		{
-			this.tween('x', this.x+BLOCK_WIDTH);
+			if (notween)
+				this.x += BLOCK_WIDTH;
+			else
+				this.tween('x', this.x+BLOCK_WIDTH);
+				
 			this.col += 1;
 		}
 
@@ -400,21 +411,22 @@ var
 			//this.piece.col(Math.floor(this.mice.x/(game.stage.width/BOARD_WIDTH)));
 		},
 		
-		left: function()
+		left: function(ev)
 		{
 			if (!this.piece.moving && this.board.verify(-1, 1))
-				this.piece.left();
+				this.piece.left(ev.type==='touchmove');
 		},
 		
-		right: function()
+		right: function(ev)
 		{
 			if (!this.piece.moving && this.board.verify(1, 1))
-				this.piece.right();
+				this.piece.right(ev.type==='touchmove');
 		},
 
 		click: function()
 		{
-			this.piece.rotate(1, this.board.verify.bind(this.board));
+			if (!this.piece.moving)
+				this.piece.rotate(1, this.board.verify.bind(this.board));
 		},
 		
 		is_gameover: function()
