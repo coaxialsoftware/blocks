@@ -455,12 +455,16 @@ var
 			this.gravity();
 		},
 		
+		_update: j5g3.Clip.prototype.update,
+		
 		update: function()
 		{
 			this.gravity();
 				
 			if (this.is_gameover())
 				this.gameover();
+				
+			this._update();
 		},
 		
 		score: function(removed)
@@ -486,8 +490,7 @@ var
 			this.add([ 
 				this.scoreboard, 
 				this.next_container,
-				this.board,
-				this.update.bind(this)
+				this.board
 			]);
 			this.next_piece = new Piece();
 			this.go_next();
@@ -522,7 +525,10 @@ var
 
 	game = j5g3.engine({ 
 
-		stage_settings: { width: 360, height: 640 }, 
+		stage_settings: { 
+			width: 360, 
+			height: 640 
+		}, 
 
 		loading: j5g3.clip().add([
 			j5g3.text({ 
@@ -530,9 +536,9 @@ var
 				font: '30px sans-serif',
 				x: 10, y: 40,
 				text: 'Loading: ',
-				paint: function(context) {
+				
+				update: function() {
 					this.text = 'Loading: ' + loader.progress;
-					j5g3.Paint.Text.apply(this, [context]);
 				}
 			})
 		]),
