@@ -83,8 +83,8 @@ var
 			this.size(BLOCK_WIDTH*this.piece.cols, BLOCK_HEIGHT*this.piece.rows);
 			this.cx = -this.width/2;
 			this.cy = -this.height/2;
-
 			this.map = this.piece.map[0];
+			this.cache();
 		},
 		
 		each_block: function(fn)
@@ -108,6 +108,7 @@ var
 			from = { },
 			_to = { }
 		;
+			me.clear_cache();
 			me.moving = true;
 			from[property] = me[property];
 			_to[property] = to;
@@ -118,7 +119,10 @@ var
 				duration: 2, 
 				from: from, 
 				to: _to,
-				on_remove: function() { me.moving = false; }
+				on_remove: function() { 
+					me.moving = false; 
+					me.cache();
+				}
 			}));
 		},
 		
@@ -177,7 +181,7 @@ var
 		setup: function()
 		{
 			this.stretch(game.stage.width-20, game.stage.height-130);
-			this.add(
+/*			this.add(
 				j5g3.rect({ 
 					stroke: '#eee', fill: '#333', 
 					alpha: 0.3, 
@@ -185,6 +189,7 @@ var
 					height: this.height
 				})
 			);
+			*/
 			
 			this.reset();
 		},
@@ -306,6 +311,9 @@ var
 		font: '20px Arial', 
 		x: 240, 
 		y: 30,
+		cy: -20,
+		width: 150,
+		height: 60,
 		
 		setup: function()
 		{
@@ -314,11 +322,13 @@ var
 				j5g3.text('Score:'), 
 				this.score
 			]);
+			this.cache();
 		},
 		
 		points: function(p)
 		{
 			this.score.text = parseInt(this.score.text, 10)+p;	
+			this.cache();
 		}
 		
 	}),
@@ -337,7 +347,7 @@ var
 		on_click: function()
 		{
 			this.remove();
-			game.stage.un('click', this.on_click);
+			this.mice.destroy();
 			game.start_main();
 		},
 		
@@ -347,7 +357,9 @@ var
 				j5g3.text({ fill: '#080', stroke: '#eee', font: 'bold 100px sans-serif', text: 'Blocks', paint: j5g3.Paint.TextStrokeFill }),
 				j5g3.text({ y: 100, x: 60, fill: '#eee', text: 'Click to start', font: '40px sans-serif'  })
 			]);
-			game.stage.on('click', this.on_click, this);
+			this.mice = mice(game.stage.canvas, {
+				click: this.on_click.bind(this)
+			});
 		}
 
 	}),
@@ -541,7 +553,7 @@ var
 		{
 			this.spritesheet = j5g3.spritesheet(assets.spritesheet).grid(10, 2);
 			this.stage.add(new Intro());
-
+			
 			this.loading.remove();
 		},
 
