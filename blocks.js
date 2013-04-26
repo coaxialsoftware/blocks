@@ -194,6 +194,13 @@ var
 			this.reset();
 		},
 		
+		shake: function()
+		{
+			game.stage.add(j5g3.Tween.Shake(
+				game.stage
+			));
+		},
+		
 		is_row_complete: function(row)
 		{
 		var
@@ -450,21 +457,20 @@ var
 			game.sound('slide');
 			
 			while (this.board.verify(0, 1))
+			{
 				this.piece.down(BLOCK_HEIGHT/2);
+				this.board.shake();
+			}
 			
 			this.gravity();
 		},
 		
-		_update: j5g3.Clip.prototype.update,
-		
-		update: function()
+		update_frame: function()
 		{
 			this.gravity();
 				
 			if (this.is_gameover())
 				this.gameover();
-				
-			this._update();
 		},
 		
 		score: function(removed)
