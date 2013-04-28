@@ -376,7 +376,7 @@ var
 				j5g3.text({ y: 100, x: 60, fill: '#eee', text: 'Click to start', font: '40px sans-serif'  })
 			]);
 			this.mice = mice(game.stage.canvas, {
-				click: this.on_click.bind(this)
+				on_fire: this.on_click.bind(this)
 			});
 		}
 
@@ -518,7 +518,7 @@ var
 				left: this.left.bind(this),
 				right: this.right.bind(this),
 				down: this.down.bind(this),
-				fire: this.slide.bind(this)
+				buttonB: this.slide.bind(this)
 			});
 			
 			this.board.on_score = this.score.bind(this);
