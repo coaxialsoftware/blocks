@@ -13,23 +13,25 @@ var
 	BOARD_HEIGHT= 18,
 
 	loader = j5g3.loader(),
-	
+
 	////////////////////////////
 	//
 	// Game Assets
 	//
 	////////////////////////////
 	assets = {
+		intro: loader.img('resources/intro.png'),
+		background: loader.img('resources/background.jpg'),
 		spritesheet: loader.img('resources/blocks-ss.png'),
 
-		audio: { 
+		audio: {
 			pop   : loader.audio('resources/pop.ogg'),
 			slide : loader.audio('resources/slide.ogg'),
 			rotate: loader.audio('resources/rotate.ogg'),
 			line  : loader.audio('resources/line.ogg')
 		}
 	},
-	
+
 	///////////////////////////////
 	//
 	// ENTITIES
@@ -39,10 +41,10 @@ var
 	Piece = j5g3.Map.extend({
 
 		_WIDTHS: [3,4,3,2,3,3,3],
-		
+
 		tw: BLOCK_WIDTH,
 		th: BLOCK_HEIGHT,
-		
+
 		row: 1,
 		col: 0,
 
@@ -58,7 +60,7 @@ var
 			case 6: return [ [[c],[c,c],[0,c]], [[0,c,c],[c,c],[]], [[0,c],[0,c,c],[0,0,c]], [[],[0,c,c],[c,c]] ];
 			}
 		},
-		
+
 		_get_piece: function()
 		{
 		var
@@ -86,7 +88,7 @@ var
 			this.map = this.piece.map[0];
 			this.cache();
 		},
-		
+
 		each_block: function(fn)
 		{
 		var
@@ -95,58 +97,58 @@ var
 		;
 			while (l--)
 				for (i=0; i<map[l].length; i++)
-					if (map[l][i] && 
-						fn(map[l][i], this.row+l, 
+					if (map[l][i] &&
+						fn(map[l][i], this.row+l,
 							this.col+i, this))
 							return;
 		},
 
 		tween: function(property, to)
 		{
-		var 
+		var
 			me = this,
 			from = { },
 			_to = { }
 		;
 			if (me.moving)
 				return;
-				
+
 			me.clear_cache();
 			me.moving = true;
 			from[property] = me[property];
 			_to[property] = to;
 
-			return me.parent.add(j5g3.tween({ 
-				target: me, 
-				auto_remove: true, 
-				duration: 2, 
-				from: from, 
+			return me.parent.add(j5g3.tween({
+				target: me,
+				auto_remove: true,
+				duration: 2,
+				from: from,
 				to: _to,
-				on_remove: function() { 
-					me.moving = false; 
+				on_remove: function() {
+					me.moving = false;
 					me.cache();
 				}
 			}));
 		},
-		
+
 		down: function(speed)
 		{
-			this.y += speed;	
+			this.y += speed;
 			this.row = Math.floor((this.cy + this.y) / BLOCK_HEIGHT)+1;
 		},
-		
+
 		rotate: function(dir, verify)
 		{
 			var
 				d = dir || 1,
 				r = this.piece.rotation += d
 			;
-			
+
 			if (r === 4)
 				this.piece.rotation=0;
 			else if (r === -1)
 				this.piece.rotation=3;
-				
+
 			if (verify && verify(0,0))
 			{
 				game.sound('rotate');
@@ -154,64 +156,64 @@ var
 			} else
 				this.piece.rotation -= d;
 		},
-		
+
 		set_col: function(c)
 		{
 			this.x = c * BLOCK_WIDTH - this.cx;
 			this.col = c+1;
 		},
-		
+
 		left: function(notween)
 		{
 			if (notween)
 				this.x -= BLOCK_WIDTH;
 			else
 				this.tween('x', this.x-BLOCK_WIDTH);
-				
+
 			this.col -= 1;
 		},
-		
+
 		right: function(notween)
 		{
 			if (notween)
 				this.x += BLOCK_WIDTH;
 			else
 				this.tween('x', this.x+BLOCK_WIDTH);
-				
+
 			this.col += 1;
 		}
 
 	}),
 
 	Board = j5g3.Clip.extend({
-	
+
 		x: 10, y: 120,
-		width: BLOCK_WIDTH*BOARD_WIDTH, 
+		width: BLOCK_WIDTH*BOARD_WIDTH,
 		height: BLOCK_HEIGHT*BOARD_HEIGHT,
 
 		setup: function()
 		{
 			this.stretch(game.stage.width-20, game.stage.height-130);
 /*			this.add(
-				j5g3.rect({ 
-					stroke: '#eee', fill: '#333', 
-					alpha: 0.3, 
+				j5g3.rect({
+					stroke: '#eee', fill: '#333',
+					alpha: 0.3,
 					width: this.width,
 					height: this.height
 				})
 			);
 			*/
-			
+
 			this.reset();
 		},
-		
+
 		shake: function()
 		{
 			game.stage.add(j5g3.Tween.Shake(
 				game.stage
 			));
 		},
-		
+
 		is_row_complete: function(row)
 		{
 		var
@@ -220,10 +222,10 @@ var
 			while (l--)
 				if (!row[l])
 					return false;
-					
+
 			return true;
 		},
-		
+
 		/**
 		 * Returns false if movement is not allowed.
 		 * TODO This could be optimized
@@ -239,10 +241,10 @@ var
 				if (map[row+y][col+x])
 					return (result = false);
 			});
-			
+
 			return result;
 		},
-		
+
 		reduce: function()
 		{
 		var
@@ -256,11 +258,11 @@ var
 					this.reduce_row(map[y], y++);
 					removed++;
 				}
-				
+
 			if (removed)
 				this.on_score(removed);
 		},
-		
+
 		reduce_row: function(row, n)
 		{
 		var
@@ -268,20 +270,20 @@ var
 			map = this.map
 		;
 			game.sound('line');
-			
+
 			for (; i<row.length-1; i++)
 				row[i].remove();
-			
+
 			for (; n>1; n--)
 				for (i=1; i<=BOARD_WIDTH; i++)
 				{
 					map[n][i] = map[n-1][i];
 					map[n][i].y += BLOCK_HEIGHT;
 				}
-					
+
 			map[0]=[10,0,0,0,0,0,0,0,0,0,0,10];
 		},
-		
+
 		nail: function()
 		{
 		var
@@ -292,16 +294,16 @@ var
 			game.sound('pop');
 			this.piece.each_block(function(block, row, col, p)
 			{
-				map[row][col] = sprite = game.spritesheet.sprite(block+10);	
+				map[row][col] = sprite = game.spritesheet.sprite(block+10);
 				me.add(sprite.pos(
-					(col-1)*BLOCK_WIDTH, 
+					(col-1)*BLOCK_WIDTH,
 					(row-1)*BLOCK_HEIGHT
 				));
 			});
 			this.piece.remove();
 			this.reduce();
 		},
-		
+
 		reset: function()
 		{
 		var
@@ -310,7 +312,7 @@ var
 			this.map = [];
 			while (i--)
 				this.map.push([10, 0,0,0,0,0,0,0,0,0,0, 10]);
-			
+
 			this.map.push([10,10,10,10,10,10,10,10,10,10,10,10]);
 		},
 
@@ -322,101 +324,104 @@ var
 		}
 
 	}),
-	
+
 	ScoreBoard = j5g3.Clip.extend({
-		
-		fill: '#eee', 
-		font: '20px Arial', 
-		x: 240, 
+
+		fill: '#eee',
+		font: '20px Arial',
+		x: 240,
 		y: 30,
 		cy: -20,
 		width: 150,
 		height: 60,
-		
+
 		setup: function()
 		{
 			this.score = j5g3.text({ text: '0', y: 30 });
-			this.add([ 
-				j5g3.text('Score:'), 
+			this.add([
+				j5g3.text('Score:'),
 				this.score
 			]);
-			this.cache();
 		},
-		
+
 		points: function(p)
 		{
-			this.score.text = parseInt(this.score.text, 10)+p;	
-			this.cache();
+			this.score.text = parseInt(this.score.text, 10)+p;
+			this.invalidate();
 		}
-		
+
 	}),
-	
+
 	///////////////////////////////
-	// 
+	//
 	// Scenes
 	//
 	////////////////////////////
-	
+
 	Intro = j5g3.Clip.extend({
 
 		x: 20,
 		y: 150,
-	
+
 		on_click: function()
 		{
 			this.remove();
 			this.mice.destroy();
 			game.start_main();
 		},
-		
+
 		setup: function()
 		{
 			this.add([
 				j5g3.text({ fill: '#080', stroke: '#eee', font: 'bold 100px sans-serif', text: 'Blocks', paint: j5g3.Paint.TextStrokeFill }),
 				j5g3.text({ y: 100, x: 60, fill: '#eee', text: 'Click to start', font: '40px sans-serif'  })
 			]);
+
+			game.background.add(j5g3.image(assets.background));
+			game.background.invalidate();
+
 			this.mice = mice(game.stage.canvas, {
 				on_fire: this.on_click.bind(this)
 			});
 		}
 
 	}),
-	
+
 	GameOver = j5g3.Clip.extend({
-		
+
 		y: 100,
 		x: 80,
-		
+
 		font: '40px sans-serif',
 		fill: '#eee',
-		
+
 		setup: function()
 		{
 			this.add(j5g3.text('Game Over!'));
 		}
-		
+
 	}),
 
 	Main = j5g3.Clip.extend({
 
 		speed: 1.5,
 		level: 0,
-		
+
 		scoreboard: new ScoreBoard(),
-		
+
 		next_container: j5g3.clip({ x: 50, y: 50, sx: 0.4, sy: 0.4 }),
 
 		mousemove: function()
 		{
 			//this.piece.col(Math.floor(this.mice.x/(game.stage.width/BOARD_WIDTH)));
 		},
-		
+
 		left: function(ev)
 		{
 			if (!this.piece.moving && this.board.verify(-1, 1))
 				this.piece.left(ev.type==='touchmove');
 		},
-		
+
 		right: function(ev)
 		{
 			if (!this.piece.moving && this.board.verify(1, 1))
@@ -428,7 +433,7 @@ var
 			if (!this.piece.moving)
 				this.piece.rotate(1, this.board.verify.bind(this.board));
 		},
-		
+
 		is_gameover: function()
 		{
 		var
@@ -439,52 +444,55 @@ var
 				if (map[i])
 					return true;
 		},
-		
+
 		gameover: function()
 		{
 			this.remove();
+			this.boardbg.remove();
+			this.scoreboard.remove();
+			this.next_container.remove();
 			this.mice.destroy();
 			game.stage.add(new GameOver());
 		},
-		
+
 		gravity: function()
 		{
 			this.piece.down(this.speed);
-			
+
 			if (this.board.verify(0, 1)===false)
 			{
 				this.board.nail();
 				this.go_next();
 			}
 		},
-		
+
 		down: function()
 		{
 			this.piece.down(BLOCK_HEIGHT/2);
 			this.gravity();
 		},
-		
+
 		slide: function()
 		{
 			game.sound('slide');
-			
+
 			while (this.board.verify(0, 1))
 			{
 				this.piece.down(BLOCK_HEIGHT/2);
 				this.board.shake();
 			}
-			
+
 			this.gravity();
 		},
-		
+
 		update_frame: function()
 		{
 			this.gravity();
-				
+
 			if (this.is_gameover())
 				this.gameover();
 		},
-		
+
 		score: function(removed)
 		{
 			this.level += removed;
@@ -494,7 +502,7 @@ var
 				3: 400,
 				4: 800
 			}[removed]);
-			
+
 			if (this.level > 10)
 			{
 				this.speed += 0.2;
@@ -505,14 +513,26 @@ var
 		setup: function()
 		{
 			this.board = new Board();
-			this.add([ 
-				this.scoreboard, 
+			this.boardbg = j5g3.rect({
+				x: this.board.x, y: this.board.y,
+				sx: this.board.sx, sy: this.board.sy,
+				width: this.board.width, height: this.board.height,
+				fill: '#000', alpha: 0.5
+			})
+
+			game.background.add([
+				this.scoreboard,
 				this.next_container,
+				this.boardbg
+			]);
+			game.background.invalidate();
+
+			this.add([
 				this.board
 			]);
 			this.next_piece = new Piece();
 			this.go_next();
-			
+
 			this.mice = mice(document.body, {
 				up: this.click.bind(this),
 				left: this.left.bind(this),
@@ -520,7 +540,7 @@ var
 				down: this.down.bind(this),
 				buttonB: this.slide.bind(this)
 			});
-			
+
 			this.board.on_score = this.score.bind(this);
 		},
 
@@ -531,36 +551,37 @@ var
 
 			this.next_piece = new Piece();
 			this.next_container.add(this.next_piece);
+			this.next_container.invalidate();
 		}
 
 	}),
-	
+
 	////////////////////////
 	//
 	// ENGINE
 	//
 	////////////////////////
 
-	game = j5g3.engine({ 
+	game = j5g3.engine({
 
-		stage_settings: { 
-			width: 360, 
-			height: 640 
-		}, 
+		stage_settings: {
+			width: 360,
+			height: 640
+		},
 
 		loading: j5g3.clip().add([
-			j5g3.text({ 
+			j5g3.text({
 				fill: '#eee',
 				font: '30px sans-serif',
 				x: 10, y: 40,
 				text: 'Loading: ',
-				
+
 				update: function() {
 					this.text = 'Loading: ' + loader.progress;
 				}
 			})
 		]),
-		
+
 		// TODO replace with some library
 		sound: function(name)
 		{
@@ -577,13 +598,23 @@ var
 		{
 			this.spritesheet = j5g3.spritesheet(assets.spritesheet).grid(10, 2);
 			this.stage.add(new Intro());
-			
+
 			this.loading.remove();
 		},
 
 		startFn: function()
 		{
-			this.stage.add(this.loading);
+			this.background = j5g3.stage({
+				canvas: j5g3.id('background'),
+				width: this.stage.width,
+				height: this.stage.height
+			});
+			this.background.draw = j5g3.Draw.RootDirty;
+
+			this.stage.add([
+				this.background,
+				this.loading
+			]);
 			this.run();
 
 			loader.ready(this.start_intro.bind(this));

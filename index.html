@@ -5,13 +5,17 @@
 	<title>J5G3 - Falling Blocks Game</title>
 	<style>
 		body {
-			background: #333;
+			background: #333; width: 360px; margin: 10px auto;
 		}
-		canvas { 
+		#stage { 
 			margin: 0 auto;
-			display: block; 
-			background: #008;
+			position: relative; 
 		}
+		#stage canvas { 
+			position: absolute;
+			display: block; 
+		}
+		
 	</style>
 </head>
 <body>
@@ -30,6 +34,10 @@
 	</dl>
 </div>
 -->
+<div id="stage">
+	<canvas id="background"></canvas>
+	<canvas id="screen"></canvas>
+</div>
 
 	<script src="lib/j5g3-all.min.js"></script>
 	<script src="lib/mice.js"></script>
