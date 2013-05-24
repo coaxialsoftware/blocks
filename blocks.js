@@ -20,9 +20,12 @@ var
 	//
 	////////////////////////////
 	assets = {
-		intro: loader.img('resources/intro.png'),
 		background: loader.img('resources/background.jpg'),
 		spritesheet: loader.img('resources/blocks-ss.png'),
+		logo: loader.img('resources/logo.png'),
+		play: loader.img('resources/play.png'),
+		score: loader.img('resources/score.png'),
+		gameover: loader.img('resources/gameover.png'),
 
 		audio: {
 			pop   : loader.audio('resources/pop.ogg'),
@@ -187,13 +190,14 @@ var
 
 	Board = j5g3.Clip.extend({
 
-		x: 10, y: 120,
+		x: 20, y: 200,
 		width: BLOCK_WIDTH*BOARD_WIDTH,
 		height: BLOCK_HEIGHT*BOARD_HEIGHT,
 
+
 		setup: function()
 		{
-			this.stretch(game.stage.width-20, game.stage.height-130);
+			this.stretch(game.stage.width-this.x*2, game.stage.height-this.y-this.x);
 /*			this.add(
 				j5g3.rect({
 					stroke: '#eee', fill: '#333',
@@ -328,7 +332,7 @@ var
 	ScoreBoard = j5g3.Clip.extend({
 
 		fill: '#eee',
-		font: '20px Arial',
+		font: '34px sans-serif',
 		x: 240,
 		y: 30,
 		cy: -20,
@@ -337,10 +341,12 @@ var
 
 		setup: function()
 		{
-			this.score = j5g3.text({ text: '0', y: 30 });
+			this.score = j5g3.text({ text: '0', x: 110, y: 25 });
+			this.level = j5g3.text({ text: '1', x: 110, y: 70 });
 			this.add([
-				j5g3.text('Score:'),
-				this.score
+				j5g3.image(assets.score),
+				this.score,
+				this.level
 			]);
 		},
 
@@ -360,7 +366,7 @@ var
 
 	Intro = j5g3.Clip.extend({
 
-		x: 20,
+		x: 96,
 		y: 150,
 
 		on_click: function()
@@ -373,8 +379,8 @@ var
 		setup: function()
 		{
 			this.add([
-				j5g3.text({ fill: '#080', stroke: '#eee', font: 'bold 100px sans-serif', text: 'Blocks', paint: j5g3.Paint.TextStrokeFill }),
-				j5g3.text({ y: 100, x: 60, fill: '#eee', text: 'Click to start', font: '40px sans-serif'  })
+				j5g3.image(assets.logo),
+				j5g3.image(assets.play).pos(100, 200)
 			]);
 
 			game.background.add(j5g3.image(assets.background));
@@ -389,15 +395,23 @@ var
 
 	GameOver = j5g3.Clip.extend({
 
-		y: 100,
-		x: 80,
+		y: 200,
+		x: 120,
 
 		font: '40px sans-serif',
 		fill: '#eee',
 
+		on_click: function()
+		{
+			this.remove();
+			this.mice.destroy();
+			game.stage.add(new Intro());
+		},
+
 		setup: function()
 		{
-			this.add(j5g3.text('Game Over!'));
+			this.add(j5g3.image(assets.gameover));
+			this.mice = mice(game.stage.canvas, { on_fire: this.on_click.bind(this)});
 		}
 
 	}),
@@ -407,9 +421,8 @@ var
 		speed: 1.5,
 		level: 0,
 
-		scoreboard: new ScoreBoard(),
-
-		next_container: j5g3.clip({ x: 50, y: 50, sx: 0.4, sy: 0.4 }),
+		scoreboard: null,
+		next_container: null,
 
 		mousemove: function()
 		{
@@ -506,7 +519,8 @@ var
 			if (this.level > 10)
 			{
 				this.speed += 0.2;
-				this.level = 0;
+				this.level = this.level-10;
+				this.scoreboard.level.text = parseInt(this.scoreboard.level.text,10) + 1;
 			}
 		},
 
@@ -518,7 +532,10 @@ var
 				sx: this.board.sx, sy: this.board.sy,
 				width: this.board.width, height: this.board.height,
 				fill: '#000', alpha: 0.5
-			})
+			});
+
+			this.scoreboard = new ScoreBoard();
+			this.next_container = j5g3.clip({ x: 50, y: 50, sx: 0.4, sy: 0.4 });
 
 			game.background.add([
 				this.scoreboard,
@@ -565,8 +582,8 @@ var
 	game = j5g3.engine({
 
 		stage_settings: {
-			width: 360,
-			height: 640
+			width: 480,
+			height: 800
 		},
 
 		loading: j5g3.clip().add([
