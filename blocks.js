@@ -194,20 +194,9 @@ var
 		width: BLOCK_WIDTH*BOARD_WIDTH,
 		height: BLOCK_HEIGHT*BOARD_HEIGHT,
 
-
 		setup: function()
 		{
 			this.stretch(game.stage.width-this.x*2, game.stage.height-this.y-this.x);
-/*			this.add(
-				j5g3.rect({
-					stroke: '#eee', fill: '#333',
-					alpha: 0.3,
-					width: this.width,
-					height: this.height
-				})
-			);
-			*/
-
 			this.reset();
 		},
 
