@@ -190,7 +190,7 @@ var
 
 	Board = j5g3.Clip.extend({
 
-		x: 20, y: 200,
+		x: 20, y: 140,
 		width: BLOCK_WIDTH*BOARD_WIDTH,
 		height: BLOCK_HEIGHT*BOARD_HEIGHT,
 
