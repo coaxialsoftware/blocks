@@ -3,20 +3,16 @@
 <head>
 	<title>J5G3 - Falling Blocks Game</title>
 	<style>
-		body {
-			background: #333;
-		}
-		canvas { 
-			margin: 0 auto;
-			display: block; 
-			background: #008;
-		}
+		body { background: #333; }
+		canvas { position: absolute; }
 	</style>
-
 </head>
 <body>
+	<canvas id="background"></canvas>
+	<canvas id="screen"></canvas>
 	
-	<script src="lib/j5g3-all.dbg.js"></script>
-	<script src="lib/mice.js"></script>
+	<script src="../j5g3/build/j5g3-all.dbg.js"></script>
+	<script src="../j5g3-in/build/j5g3-in-all.js"></script>
+	<script src="../j5g3-fx/src/j5g3-fx.js"></script>
 	<script src="blocks.js"></script>
 </body>

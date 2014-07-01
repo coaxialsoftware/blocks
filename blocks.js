@@ -13,6 +13,7 @@ var
 	BOARD_HEIGHT= 18,
 
 	loader = j5g3.loader(),
+	fx = j5g3.fx,
 
 	////////////////////////////
 	//
@@ -124,7 +125,7 @@ var
 			return me.parent.add(j5g3.tween({
 				target: me,
 				auto_remove: true,
-				duration: 2,
+				duration: 3,
 				from: from,
 				to: _to,
 				on_remove: function() {
@@ -202,9 +203,7 @@ var
 
 		shake: function()
 		{
-			game.stage.add(j5g3.Tween.Shake(
-				game.stage
-			));
+			game.stage.add(fx.Animate.shake(game.stage));
 		},
 
 		is_row_complete: function(row)
@@ -256,6 +255,15 @@ var
 				this.on_score(removed);
 		},
 
+		remove_piece: function(p)
+		{
+			var t = fx.Animate.dissolve(p);
+			t.to.x = p.x - p.width/2;
+			t.to.y = p.y - p.height/2;
+
+			this.add(t);
+		},
+
 		reduce_row: function(row, n)
 		{
 		var
@@ -265,7 +273,7 @@ var
 			game.sound('line');
 
 			for (; i<row.length-1; i++)
-				row[i].remove();
+				this.remove_piece(row[i]);
 
 			for (; n>1; n--)
 				for (i=1; i<=BOARD_WIDTH; i++)
@@ -323,17 +331,16 @@ var
 		fill: '#eee',
 		font: '34px sans-serif',
 		x: 240,
-		y: 30,
-		cy: -20,
+		y: 20,
 		width: 150,
 		height: 60,
 
 		setup: function()
 		{
-			this.score = j5g3.text({ text: '0', x: 110, y: 25 });
-			this.level = j5g3.text({ text: '1', x: 110, y: 70 });
+			this.score = j5g3.text({ text: '0', x: 110, y: 0 });
+			this.level = j5g3.text({ text: '1', x: 110, y: 48 });
 			this.add([
-				j5g3.image(assets.score),
+				j5g3.image(assets.score).pos(0, 10),
 				this.score,
 				this.level
 			]);
@@ -367,17 +374,26 @@ var
 
 		setup: function()
 		{
-			this.add([
-				j5g3.image(assets.logo),
-				j5g3.image(assets.play).pos(100, 200)
-			]);
+		var
+			logo = j5g3.image(assets.logo).pos(0, -200),
+			play = j5g3.image(assets.play).pos(100, 200).set({ alpha: 0 });
+			tween = j5g3.tween({
+				target: logo, to: { y: 0 }, auto_remove: true,
+				duration: 20
+			}),
+			tween2 = fx.Animate.fade_in(play)
+		;
+			this.add([ logo, play, tween, tween2 ]);
 
 			game.background.add(j5g3.image(assets.background));
 			game.background.invalidate();
 
-			this.mice = mice(game.stage.canvas, {
+			this.mice = j5g3.in({
+				element: game.stage.canvas,
 				on_fire: this.on_click.bind(this)
 			});
+
+			this.mice.module.Mouse.capture_move = false;
 		}
 
 	}),
@@ -400,7 +416,22 @@ var
 		setup: function()
 		{
 			this.add(j5g3.image(assets.gameover));
-			this.mice = mice(game.stage.canvas, { on_fire: this.on_click.bind(this)});
+			this.mice = j5g3.in({
+				button: this.on_click.bind(this)
+			});
+		}
+
+	}),
+
+	Help = j5g3.Clip.extend({
+
+		setup: function()
+		{
+			this.add([
+				j5g3.text("CONTROLS"),
+				j5g3.mtext("Drag Left/Right/Down to move.\n\n" +
+				"Drag Up to Rotate.\n\nFlick Down to Hard Drop.")
+			]);
 		}
 
 	}),
@@ -412,11 +443,6 @@ var
 
 		scoreboard: null,
 		next_container: null,
-
-		mousemove: function()
-		{
-			//this.piece.col(Math.floor(this.mice.x/(game.stage.width/BOARD_WIDTH)));
-		},
 
 		left: function(ev)
 		{
@@ -485,6 +511,7 @@ var
 			}
 
 			this.gravity();
+			this.mice.suspend(300);
 		},
 
 		update_frame: function()
@@ -524,22 +551,22 @@ var
 			});
 
 			this.scoreboard = new ScoreBoard();
-			this.next_container = j5g3.clip({ x: 50, y: 50, sx: 0.4, sy: 0.4 });
+			this.next_container = j5g3.clip({
+				x: 50, y: 50, sx: 0.4, sy: 0.4,
+				width: 100, height: 100
+			});
 
 			game.background.add([
 				this.scoreboard,
 				this.next_container,
 				this.boardbg
-			]);
-			game.background.invalidate();
+			]).invalidate();
 
-			this.add([
-				this.board
-			]);
 			this.next_piece = new Piece();
-			this.go_next();
+			this.add([ this.board ]).go_next();
 
-			this.mice = mice(document.body, {
+			this.mice = j5g3.in({
+				element: game.stage.canvas,
 				up: this.click.bind(this),
 				left: this.left.bind(this),
 				right: this.right.bind(this),
@@ -552,12 +579,14 @@ var
 
 		go_next: function()
 		{
-			this.piece = this.next_piece;
+			this.piece = this.next_piece.remove();
 			this.board.add_piece(this.next_piece);
 
 			this.next_piece = new Piece();
-			this.next_container.add(this.next_piece);
-			this.next_container.invalidate();
+
+			this.next_piece.pos(-this.next_piece.cx, -this.next_piece.cy);
+			this.next_container.add(this.next_piece)
+				.invalidate();
 		}
 
 	}),
@@ -580,10 +609,9 @@ var
 				fill: '#eee',
 				font: '30px sans-serif',
 				x: 10, y: 40,
-				text: 'Loading: ',
 
 				update: function() {
-					this.text = 'Loading: ' + loader.progress;
+					this.text = 'Loading: ' + (loader.progress*100|0) + '%';
 				}
 			})
 		]),
@@ -603,6 +631,7 @@ var
 		start_intro: function()
 		{
 			this.spritesheet = j5g3.spritesheet(assets.spritesheet).grid(10, 2);
+			console.log(assets.spritesheet.width, assets.spritesheet.height);
 			this.stage.add(new Intro());
 
 			this.loading.remove();
@@ -610,17 +639,12 @@ var
 
 		startFn: function()
 		{
-			this.background = j5g3.stage({
+			this.background = this.stage.layer({
 				canvas: j5g3.id('background'),
-				width: this.stage.width,
-				height: this.stage.height
+				background: true
 			});
-			this.background.draw = j5g3.Draw.RootDirty;
 
-			this.stage.add([
-				this.background,
-				this.loading
-			]);
+			this.stage.add(this.loading);
 			this.run();
 
 			loader.ready(this.start_intro.bind(this));
