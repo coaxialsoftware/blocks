@@ -3,44 +3,16 @@
 <head>
 	<meta name="viewport" content="width=device-width, user-scalable=no">
 	<title>J5G3 - Falling Blocks Game</title>
-	<style>
-		body {
-			background: #333; width: 480px; margin: 10px auto;
-		}
-		#stage { 
-			margin: 0 auto;
-			position: relative; 
-		}
-		#stage canvas { 
-			position: absolute;
-			display: block; 
-		}
-		
-	</style>
+	<link rel="stylesheet" href="../j5g3/build/j5g3.css" />
 </head>
 <body>
 	
-<!--
-<div style="text-align: center">
-	<h2>Instructions</h2>
-	<dl>
-	<dt>Left Arrow:</dt><dd>Move Left</dd>
-	<dt>Right Arrow:</dt><dd>Move Right</dd>
-	<dt>Up Arrow:</dt><dd>Rotate Clockwise</dd>
-	<dt>Down Arrow:</dt><dd>Soft Drop</dd>
-	<dt>Spacebar:</dt><dd>Hard Drop</dd>
-	<dt>Z:</dt><dd>Rotate CounterClockwise</dd>
-	<dt>P:</dt><dd>Pause</dd>
-	</dl>
-</div>
--->
 <div id="stage">
 	<canvas id="background"></canvas>
 	<canvas id="screen"></canvas>
 </div>
 
-	<script src="lib/j5g3-all.min.js"></script>
-	<script src="lib/mice.js"></script>
+	<script src="libs.js"></script>
 	<script src="blocks.js"></script>
 </body>
 </html>
