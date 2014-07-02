@@ -2,17 +2,19 @@
 <html>
 <head>
 	<title>J5G3 - Falling Blocks Game</title>
-	<style>
-		body { background: #333; }
-		canvas { position: absolute; }
-	</style>
+	<link rel="stylesheet" href="../j5g3/build/j5g3.css" />
 </head>
 <body>
 	<canvas id="background"></canvas>
 	<canvas id="screen"></canvas>
 	
+	<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+	
 	<script src="../j5g3/build/j5g3-all.dbg.js"></script>
 	<script src="../j5g3-in/build/j5g3-in-all.js"></script>
 	<script src="../j5g3-fx/src/j5g3-fx.js"></script>
 	<script src="blocks.js"></script>
+	<script>
+		j5g3.dbg.attachToolbar();
+	</script>
 </body>

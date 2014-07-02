@@ -231,7 +231,10 @@ var
 			this.piece.each_block(function(block, row, col, p)
 			{
 				if (map[row+y][col+x])
-					return (result = false);
+				{
+					result = false;
+					return result;
+				}
 			});
 
 			return result;
@@ -257,11 +260,12 @@ var
 
 		remove_piece: function(p)
 		{
-			var t = fx.Animate.dissolve(p);
+			var t = fx.Animate.expand(p);
 			t.to.x = p.x - p.width/2;
 			t.to.y = p.y - p.height/2;
+			t.on_remove = function() { p.remove(); };
 
-			this.add(t);
+			this.add([ t, fx.Animate.fade_out(p) ]);
 		},
 
 		reduce_row: function(row, n)
@@ -403,8 +407,9 @@ var
 		y: 200,
 		x: 120,
 
-		font: '40px sans-serif',
+		font: 'bold 45px sans-serif',
 		fill: '#eee',
+		stroke: '#000',
 
 		on_click: function()
 		{
@@ -415,7 +420,16 @@ var
 
 		setup: function()
 		{
-			this.add(j5g3.image(assets.gameover));
+			var text = j5g3.text('Restart').pos(120, 300);
+			text.paint = j5g3.Paint.TextStrokeFill;
+
+			this.add([
+				j5g3.image(assets.gameover),
+				text
+			]);
+
+			text.align_text('center');
+
 			this.mice = j5g3.in({
 				button: this.on_click.bind(this)
 			});
@@ -480,6 +494,7 @@ var
 			this.scoreboard.remove();
 			this.next_container.remove();
 			this.mice.destroy();
+			game.background.invalidate();
 			game.stage.add(new GameOver());
 		},
 
@@ -507,9 +522,9 @@ var
 			while (this.board.verify(0, 1))
 			{
 				this.piece.down(BLOCK_HEIGHT/2);
-				this.board.shake();
 			}
 
+			this.board.shake();
 			this.gravity();
 			this.mice.suspend(300);
 		},
@@ -552,7 +567,7 @@ var
 
 			this.scoreboard = new ScoreBoard();
 			this.next_container = j5g3.clip({
-				x: 50, y: 50, sx: 0.4, sy: 0.4,
+				x: 50, y: 30, sx: 0.4, sy: 0.4,
 				width: 100, height: 100
 			});
 
@@ -631,7 +646,6 @@ var
 		start_intro: function()
 		{
 			this.spritesheet = j5g3.spritesheet(assets.spritesheet).grid(10, 2);
-			console.log(assets.spritesheet.width, assets.spritesheet.height);
 			this.stage.add(new Intro());
 
 			this.loading.remove();
