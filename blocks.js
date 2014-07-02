@@ -12,6 +12,7 @@ var
 	BOARD_WIDTH = 10,
 	BOARD_HEIGHT= 18,
 
+	j5g3 = window.j5g3,
 	loader = j5g3.loader(),
 	fx = j5g3.fx,
 
@@ -29,10 +30,10 @@ var
 		gameover: loader.img('resources/gameover.png'),
 
 		audio: {
-			pop   : loader.audio('resources/pop.ogg'),
-			slide : loader.audio('resources/slide.ogg'),
-			rotate: loader.audio('resources/rotate.ogg'),
-			line  : loader.audio('resources/line.ogg')
+			'pop'   : loader.audio('resources/pop.ogg'),
+			'slide' : loader.audio('resources/slide.ogg'),
+			'rotate': loader.audio('resources/rotate.ogg'),
+			'line'  : loader.audio('resources/line.ogg')
 		}
 	},
 
@@ -582,11 +583,11 @@ var
 
 			this.mice = j5g3.in({
 				element: game.stage.canvas,
-				up: this.click.bind(this),
-				left: this.left.bind(this),
-				right: this.right.bind(this),
-				down: this.down.bind(this),
-				buttonB: this.slide.bind(this)
+				'up': this.click.bind(this),
+				'left': this.left.bind(this),
+				'right': this.right.bind(this),
+				'down': this.down.bind(this),
+				'buttonB': this.slide.bind(this)
 			});
 
 			this.board.on_score = this.score.bind(this);
