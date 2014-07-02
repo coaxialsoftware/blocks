@@ -33,7 +33,8 @@ var
 			'pop'   : loader.audio('resources/pop.ogg'),
 			'slide' : loader.audio('resources/slide.ogg'),
 			'rotate': loader.audio('resources/rotate.ogg'),
-			'line'  : loader.audio('resources/line.ogg')
+			'line'  : loader.audio('resources/line.ogg'),
+			'gameover': loader.audio('resources/gameover.mp3')
 		}
 	},
 
@@ -393,12 +394,9 @@ var
 			game.background.add(j5g3.image(assets.background));
 			game.background.invalidate();
 
-			this.mice = j5g3.in({
-				element: game.stage.canvas,
-				on_fire: this.on_click.bind(this)
-			});
-
-			this.mice.module.Mouse.capture_move = false;
+			this.mice = j5g3.in(game.stage.canvas)
+				.on('button', this.on_click.bind(this))
+			;
 		}
 
 	}),
@@ -431,9 +429,9 @@ var
 
 			text.align_text('center');
 
-			this.mice = j5g3.in({
-				button: this.on_click.bind(this)
-			});
+			this.mice = j5g3.in(game.stage.canvas)
+				.on('button', this.on_click.bind(this))
+			;
 		}
 
 	}),
@@ -495,6 +493,7 @@ var
 			this.scoreboard.remove();
 			this.next_container.remove();
 			this.mice.destroy();
+			game.sound('gameover');
 			game.background.invalidate();
 			game.stage.add(new GameOver());
 		},
@@ -581,8 +580,7 @@ var
 			this.next_piece = new Piece();
 			this.add([ this.board ]).go_next();
 
-			this.mice = j5g3.in({
-				element: game.stage.canvas,
+			this.mice = j5g3.in(game.stage.canvas).on({
 				'up': this.click.bind(this),
 				'left': this.left.bind(this),
 				'right': this.right.bind(this),
