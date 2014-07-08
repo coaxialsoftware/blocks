@@ -615,7 +615,8 @@ var
 
 		stage_settings: {
 			width: 480,
-			height: 800
+			height: 800,
+			container: true
 		},
 
 		loading: j5g3.clip().add([
@@ -652,8 +653,8 @@ var
 
 		startFn: function()
 		{
+			this.stageManager = new j5g3.gdk.StageManager(this.stage);
 			this.background = this.stage.layer({
-				canvas: j5g3.id('background'),
 				background: true
 			});
 
