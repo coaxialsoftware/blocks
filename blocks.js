@@ -619,17 +619,12 @@ var
 			container: true
 		},
 
-		loading: j5g3.clip().add([
-			j5g3.text({
-				fill: '#eee',
-				font: '30px sans-serif',
-				x: 10, y: 40,
-
-				update: function() {
-					this.text = 'Loading: ' + (loader.progress*100|0) + '%';
-				}
-			})
-		]),
+		loading: new j5g3.gdk.Loading({
+			loader: loader,
+			on_remove: function() {
+				game.start_intro();
+			}
+		}),
 
 		// TODO replace with some library
 		sound: function(name)
@@ -647,8 +642,6 @@ var
 		{
 			this.spritesheet = j5g3.spritesheet(assets.spritesheet).grid(10, 2);
 			this.stage.add(new Intro());
-
-			this.loading.remove();
 		},
 
 		startFn: function()
@@ -660,8 +653,6 @@ var
 
 			this.stage.add(this.loading);
 			this.run();
-
-			loader.ready(this.start_intro.bind(this));
 		}
 	})
 ;
