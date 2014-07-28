@@ -374,7 +374,7 @@ var
 		on_click: function()
 		{
 			this.remove();
-			this.mice.destroy();
+			this.mice.remove();
 			game.start_main();
 		},
 
@@ -395,7 +395,7 @@ var
 			game.background.invalidate();
 
 			this.mice = j5g3.in(game.stage.canvas)
-				.on('button', this.on_click.bind(this))
+				.on({ 'button': this.on_click.bind(this) })
 			;
 		}
 
@@ -413,7 +413,7 @@ var
 		on_click: function()
 		{
 			this.remove();
-			this.mice.destroy();
+			this.mice.remove();
 			game.stage.add(new Intro());
 		},
 
@@ -430,7 +430,7 @@ var
 			text.align_text('center');
 
 			this.mice = j5g3.in(game.stage.canvas)
-				.on('button', this.on_click.bind(this))
+				.on({ 'button': this.on_click.bind(this) })
 			;
 		}
 
@@ -492,7 +492,7 @@ var
 			this.boardbg.remove();
 			this.scoreboard.remove();
 			this.next_container.remove();
-			this.mice.destroy();
+			this.mice.remove();
 			game.sound('gameover');
 			game.background.invalidate();
 			game.stage.add(new GameOver());
@@ -647,7 +647,7 @@ var
 		startFn: function()
 		{
 			this.stageManager = new j5g3.gdk.StageManager(this.stage);
-			this.background = this.stage.layer({
+			this.background = this.layer({
 				background: true
 			});
 
